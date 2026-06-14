@@ -20,8 +20,8 @@ const F_BOLD_ITAL = 'Times-BoldItalic';
 const F_ARAB      = 'ArabFont';
 const F_ARAB_BOLD = 'ArabFontBold';
 const F_NASKH     = 'NaskhFont';
-// Font kop surat — Helvetica (built-in PDFKit, mirip Helvetica/Swiss)
-const F_KOP       = 'Helvetica-Bold';
+// Font kop surat — Times (built-in PDFKit)
+const F_KOP       = 'Times-Bold';
 const F_KOP_REG   = 'Times-Roman';
 
 // ── PAGE CONSTANTS ─────────────────────────────────────────────────────────[...]
@@ -37,8 +37,8 @@ const FS_ISI          = 11;
 const FS_ARAB         = 14;
 const LINE_GAP        = 2;   // line gap untuk paragraf biasa
 const LINE_GAP_TABLE  = 0;   // line gap dalam sel tabel — rapat seperti paragraf biasa
-const FS_KOP_TINGKAT  = 10;
-const FS_KOP_NAMA     = 18;  // diperbesar, Helvetica Bold hitam
+const FS_KOP_TINGKAT  = 12;
+const FS_KOP_NAMA     = 18;  // diperbesar, Helvetica Bold hijau
 const FS_KOP_ARAB     = 22;  // font Arab di kop surat
 const FS_KOP_DAERAH   = 18;  // disamakan dengan nama lembaga
 const FS_KOP_ALAMAT   = 8.5;
@@ -939,16 +939,16 @@ async function drawKopSurat(doc, organisasi, pageY) {
     }
   }
 
-  // Nama organisasi — Helvetica Bold, hitam, besar
+  // Nama organisasi — Times New Roman Bold, hijau, besar
   if (namaOrg) {
-    doc.font(F_KOP).fontSize(FS_KOP_NAMA).fillColor('#000000')
+    doc.font(F_KOP).fontSize(FS_KOP_NAMA).fillColor(GREEN)
        .text(namaOrg.toUpperCase(), textX, y, { width: textW, align: 'center' });
     y = doc.y + 1;
   }
 
-  // Daerah — Helvetica Bold, hitam, sama besar dengan nama
+  // Daerah — Times New Roman Bold, hijau, sama besar dengan nama
   if (daerah) {
-    doc.font(F_KOP).fontSize(FS_KOP_DAERAH).fillColor('#000000')
+    doc.font(F_KOP).fontSize(FS_KOP_DAERAH).fillColor(GREEN)
        .text(daerah.toUpperCase(), textX, y, { width: textW, align: 'center' });
     y = doc.y + 6;
   }
@@ -972,10 +972,14 @@ async function drawKopSurat(doc, organisasi, pageY) {
     y = doc.y + 1;
   }
 
-  // Garis pemisah kop — DIHAPUS sesuai permintaan
-  // (tidak ada garis hijau di kop)
+  // Garis pemisah kop — hijau, tebal 1pt
+  doc.moveTo(ML, y)
+     .lineTo(ML + CW, y)
+     .lineWidth(1)
+     .strokeColor(GREEN)
+     .stroke();
 
-  return y + 10;
+  return y + 8;
 }
 
 // ── IDENTITAS SURAT ─────────────────────────────────────────────────────────[...]

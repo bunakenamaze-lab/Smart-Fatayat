@@ -227,11 +227,11 @@ export default function ProfilOrganisasiPage() {
                 )}
                 {/* Teks kop */}
                 <div className="flex-1 text-center" style={{ lineHeight: 1.3 }}>
-                  {/* Tingkatan — Helvetica, hijau, kecil */}
+                  {/* Tingkatan — Times New Roman, hijau */}
                   {form.tingkatanOrg && (
                     <p style={{
-                      fontSize: 10, fontWeight: 700,
-                      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                      fontSize: 12, fontWeight: 700,
+                      fontFamily: "'Times New Roman', Times, serif",
                       color: '#166534', textTransform: 'uppercase', margin: '0 0 1px 0',
                     }}>
                       {form.tingkatanOrg}
@@ -247,41 +247,41 @@ export default function ProfilOrganisasiPage() {
                       {form.namaArab}
                     </p>
                   )}
-                  {/* Nama Org — Helvetica Bold, HITAM, besar */}
+                  {/* Nama Org — Times New Roman Bold, HIJAU, besar */}
                   {form.namaOrg && (
                     <p style={{
                       fontSize: 18, fontWeight: 700,
-                      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                      color: '#000000', textTransform: 'uppercase', margin: '1px 0',
+                      fontFamily: "'Times New Roman', Times, serif",
+                      color: '#166534', textTransform: 'uppercase', margin: '1px 0',
                     }}>
                       {form.namaOrg}
                     </p>
                   )}
-                  {/* Daerah — Helvetica Bold, HITAM, sama besar */}
+                  {/* Daerah — Times New Roman Bold, HIJAU, sama besar */}
                   {form.daerahOrg && (
                     <p style={{
                       fontSize: 18, fontWeight: 700,
-                      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                      color: '#000000', textTransform: 'uppercase', margin: '1px 0',
+                      fontFamily: "'Times New Roman', Times, serif",
+                      color: '#166534', textTransform: 'uppercase', margin: '1px 0',
                     }}>
                       {form.daerahOrg}
                     </p>
                   )}
-                  {/* Alamat — HIJAU */}
+                  {/* Alamat — Times New Roman, HIJAU */}
                   {form.alamat && (
                     <p style={{
                       fontSize: 8.5, color: '#166534',
-                      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                      fontFamily: "'Times New Roman', Times, serif",
                       margin: '1px 0',
                     }}>
                       {form.alamat}
                     </p>
                   )}
-                  {/* Kontak — HIJAU */}
+                  {/* Kontak — Times New Roman, HIJAU */}
                   {[form.telepon, form.email, form.website].filter(Boolean).length > 0 && (
                     <p style={{
                       fontSize: 7.5, color: '#166534',
-                      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                      fontFamily: "'Times New Roman', Times, serif",
                       margin: '1px 0',
                     }}>
                       {[
@@ -293,7 +293,8 @@ export default function ProfilOrganisasiPage() {
                   )}
                 </div>
               </div>
-              {/* Garis DIHAPUS sesuai pdfGenerator */}
+              {/* Garis pemisah kop — hijau */}
+              <div style={{ borderTop: '1px solid #166534', marginTop: 6 }} />
             </div>
             <p className="text-[10px] text-gray-400 text-center mt-3 italic">
               Kop surat akan tampil seperti ini pada setiap halaman dokumen resmi
