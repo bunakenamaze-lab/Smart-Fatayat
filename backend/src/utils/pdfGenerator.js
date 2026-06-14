@@ -598,7 +598,7 @@ function estimateBlockHeight(doc, block) {
       }
       h += rowH;
     }
-    return h + 6;
+    return h + 4;
   }
 
   // para atau listitem
@@ -866,8 +866,8 @@ async function drawKopSurat(doc, organisasi, pageY) {
   const email     = organisasi.email        || '';
   const website   = organisasi.website      || '';
 
-  const logoMaxSize = 72;  // diperbesar hingga batas atas kop
-  const logoX       = ML;
+  const logoMaxSize = 70;  // diperbesar hingga batas atas kop
+  const logoX       = ML + 2;
   const textX       = hasLogo ? ML + logoMaxSize + 10 : ML;
   const textW       = hasLogo ? CW - logoMaxSize - 10  : CW;
   let   y           = pageY !== undefined ? pageY : MT;
@@ -910,7 +910,7 @@ async function drawKopSurat(doc, organisasi, pageY) {
         drawH
       );
 
-      const logoY = y + Math.max(0, (estimatedTextH - drawH) / 2);
+      const logoY = y + Math.max(0, (estimatedTextH - drawH) / 2) - 6;
       doc.image(logoPath, logoX, logoY, { width: drawW, height: drawH });
       console.log('✅ Logo berhasil ditampilkan:', logoPath);
     } catch (err) {
