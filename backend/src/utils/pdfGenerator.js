@@ -1145,12 +1145,11 @@ async function renderBodyBlocks(doc, blocks, startY, kopHeight, organisasi, foot
 // ── TANDA TANGAN ─────────────────────────────────────────────────────────────
 // Layout 2 kolom: Ketua (kiri) dan Sekretaris (kanan)
 async function drawTandaTangan(doc, surat, startY, qrDataUrl) {
-  const colW        = 180;
+  const colW        = 210;
   const gapCol      = CW - colW * 2;
-  const ketuaOffset = 5;
-  const xKetua      = ML + ketuaOffset;
+  const xKetua      = ML;
   const xSekr       = ML + colW + gapCol;
-  const colWKetua   = colW - ketuaOffset;
+  const colWKetua   = colW;
   const qrSz        = 35;
   const gapTtd      = FS_ISI * 4;
 
