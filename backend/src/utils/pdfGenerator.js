@@ -27,7 +27,7 @@ const F_KOP_REG   = 'Times-Roman';
 // ── PAGE CONSTANTS ─────────────────────────────────────────────────────────[...]
 const ML = 57;   // margin left
 const MR = 57;   // margin right
-const MT = 22;   // margin top
+const MT = 25;   // margin top
 const PW = 595.28;
 const PH = 841.89;
 const CW = PW - ML - MR;
@@ -1147,7 +1147,7 @@ async function renderBodyBlocks(doc, blocks, startY, kopHeight, organisasi, foot
 async function drawTandaTangan(doc, surat, startY, qrDataUrl) {
   const colW        = 180;
   const gapCol      = CW - colW * 2;
-  const ketuaOffset = 10;
+  const ketuaOffset = 5;
   const xKetua      = ML + ketuaOffset;
   const xSekr       = ML + colW + gapCol;
   const colWKetua   = colW - ketuaOffset;
