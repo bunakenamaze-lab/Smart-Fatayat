@@ -1148,7 +1148,7 @@ async function drawTandaTangan(doc, surat, startY, qrDataUrl) {
   const colW        = 210;
   const gapCol      = CW - colW * 2;
   const xKetua      = ML;
-  const xSekr       = ML + colW + gapCol - 25;
+  const xSekr       = ML + colW + gapCol;
   const colWKetua   = colW + 25;
   const qrSz        = 35;
   const gapTtd      = FS_ISI * 4;
