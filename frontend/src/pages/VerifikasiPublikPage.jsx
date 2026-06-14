@@ -95,7 +95,7 @@ export default function VerifikasiPublikPage() {
                 )}
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">Diterbitkan oleh</p>
-                  <p className="font-semibold text-primary-800">{data.data.organisasi?.nama}</p>
+                  <p className="font-semibold text-primary-800">{data.data.organisasi?.tingkatan} {data.data.organisasi?.nama}</p>
                   <p className="font-semibold text-primary-800">{data.data.organisasi.daerah}</p>
                   {data.data.organisasi?.alamat && (
                     <p className="text-xs text-gray-500 mt-0.5">{data.data.organisasi.alamat}</p>

@@ -4,10 +4,10 @@ const BULAN_ROMAWI = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','X
 
 /**
  * Generate nomor surat otomatis
- * Format: 001/A/FPP-BDG/V/2026
+ * Format: 001/A/PC-FNU/V/2026
  * - 001     = urutan surat bulan ini (3 digit)
  * - A       = jenis surat (A/B/C/SK/...)
- * - FPP-BDG = singkatan Forum Pondok Pesantren Bandung
+ * - PC-FNU  = singkatan Pengurus Cabang Fatayat Nahdlatul Ulama
  * - V       = bulan romawi
  * - 2026    = tahun
  */
@@ -28,7 +28,7 @@ async function generateNomorSurat(jenisSurat = 'A') {
 
   const urutan = String(count + 1).padStart(3, '0');
 
-  return `${urutan}/${jenisSurat}/FPP-BDG/${BULAN_ROMAWI[bulan - 1]}/${tahun}`;
+  return `${urutan}/${jenisSurat}/PC-FNU/${BULAN_ROMAWI[bulan - 1]}/${tahun}`;
 }
 
 function buatSingkatan(tingkatan, namaOrg) {
