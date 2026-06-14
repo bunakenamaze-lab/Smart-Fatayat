@@ -280,7 +280,7 @@ export default function ProfilOrganisasiPage() {
                   {/* Kontak — Times New Roman, HIJAU */}
                   {[form.telepon, form.email, form.website].filter(Boolean).length > 0 && (
                     <p style={{
-                      fontSize: 7.5, color: '#166534',
+                      fontSize: 8.5, color: '#166534',
                       fontFamily: "'Times New Roman', Times, serif",
                       margin: '1px 0',
                     }}>
@@ -294,7 +294,7 @@ export default function ProfilOrganisasiPage() {
                 </div>
               </div>
               {/* Garis pemisah kop — hijau */}
-              <div style={{ borderTop: '1px solid #166534', marginTop: 6 }} />
+              <div style={{ borderTop: '2px solid #166534', marginTop: 4 }} />
             </div>
             <p className="text-[10px] text-gray-400 text-center mt-3 italic">
               Kop surat akan tampil seperti ini pada setiap halaman dokumen resmi

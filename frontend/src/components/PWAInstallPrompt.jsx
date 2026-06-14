@@ -34,7 +34,7 @@ export function PWAInstallPrompt() {
         <img src="/logo-org.png" alt="RISALATREN" className="w-full h-full object-cover" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-800">Install RISALATREN</p>
+        <p className="text-sm font-semibold text-gray-800">Install SAFIRA</p>
         <p className="text-xs text-gray-500 mt-0.5">Pasang aplikasi untuk akses lebih cepat</p>
         <div className="flex gap-2 mt-2">
           <button
@@ -73,7 +73,7 @@ export function PWAUpdatePrompt() {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-gray-800">Update Tersedia</p>
-        <p className="text-xs text-gray-500 mt-0.5">Versi baru RISALATREN siap digunakan</p>
+        <p className="text-xs text-gray-500 mt-0.5">Versi baru SAFIRA siap digunakan</p>
         <div className="flex gap-2 mt-2">
           <button
             onClick={() => updateServiceWorker(true)}
