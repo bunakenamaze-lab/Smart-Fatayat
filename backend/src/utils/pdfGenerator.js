@@ -923,9 +923,9 @@ async function drawKopSurat(doc, organisasi, pageY) {
 
   // Tingkatan — font Helvetica, hijau
   if (tingkatan) {
-    doc.font(F_KOP_REG).fontSize(FS_KOP_TINGKAT).fillColor(GREEN)
+    doc.font(F_KOP).fontSize(FS_KOP_TINGKAT).fillColor(GREEN)
        .text(tingkatan.toUpperCase(), textX, y, { width: textW, align: 'center' });
-    y = doc.y + 2;
+    y = doc.y + 3;
   }
 
   // Nama Arab yayasan
@@ -950,14 +950,14 @@ async function drawKopSurat(doc, organisasi, pageY) {
   if (daerah) {
     doc.font(F_KOP).fontSize(FS_KOP_DAERAH).fillColor(GREEN)
        .text(daerah.toUpperCase(), textX, y, { width: textW, align: 'center' });
-    y = doc.y + 4;
+    y = doc.y + 2;
   }
 
   // Alamat — hijau
   if (alamat) {
     doc.font(F_KOP_REG).fontSize(FS_KOP_ALAMAT).fillColor(GREEN)
        .text(alamat, textX, y, { width: textW, align: 'center' });
-    y = doc.y + 3;
+    y = doc.y + 2;
   }
 
   // Kontak — hijau
@@ -1034,7 +1034,7 @@ function drawTujuan(doc, surat, startY) {
   y = doc.y + 1;
   doc.font(F_REG).fontSize(FS_ISI).fillColor('#000000')
      .text('        Tempat', ML, y, { width: CW });
-  y = doc.y + 4;
+  y = doc.y + 2;
   return y;
 }
 
@@ -1147,7 +1147,7 @@ async function renderBodyBlocks(doc, blocks, startY, kopHeight, organisasi, foot
 async function drawTandaTangan(doc, surat, startY, qrDataUrl) {
   const colW        = 180;
   const gapCol      = CW - colW * 2;
-  const ketuaOffset = 0;
+  const ketuaOffset = 10;
   const xKetua      = ML + ketuaOffset;
   const xSekr       = ML + colW + gapCol;
   const colWKetua   = colW - ketuaOffset;
