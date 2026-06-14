@@ -15,7 +15,7 @@ function getFrontendUrl() {
   const envUrl = process.env.FRONTEND_URL || '';
   // Jika env kosong atau masih localhost, paksa pakai URL production
   if (!envUrl || envUrl.includes('localhost') || envUrl.includes('127.0.0.1')) {
-    return 'https://risalatren.fppkotabandung.or.id';
+    return 'https://smartfatayat.nukotabandung.or.id';
   }
   return envUrl;
 }
