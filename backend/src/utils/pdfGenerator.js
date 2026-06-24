@@ -3,6 +3,7 @@ const PDFDocument = require('pdfkit');
 const path        = require('path');
 const fs2         = require('fs');
 const { generateQRCodeDataURL, generateQRCodeDataURLWithLogo, getFrontendUrl } = require('./qrcode');
+const { PDFDocument: PDFLibDoc } = require('pdf-lib');
 
 // ── FONT PATHS ────────────────────────────────────────────────────────────[...]
 const FONTS_DIR       = path.join(__dirname, 'fonts');
@@ -1657,7 +1658,8 @@ async function generateSuratPDF(surat, organisasi) {
 
   const FOOTER_RESERVE = 90;
 
-  return new Promise(async (resolve, reject) => {
+  // Generate surat utama
+  await new Promise(async (resolve, reject) => {
     try {
       const doc = new PDFDocument({ size: 'A4', margin: 0, autoFirstPage: true, bufferPages: true });
       registerArabFonts(doc);
@@ -1668,23 +1670,80 @@ async function generateSuratPDF(surat, organisasi) {
       const jenis = surat.jenisSurat || 'A';
 
       if (jenis === 'SK') {
-        // Layout 3: Surat Keputusan
         await generateLayoutSK(doc, surat, organisasi, qrDataUrl, FOOTER_RESERVE, qrFooterUrl);
       } else if (jenis === 'A' || jenis === 'B') {
-        // Layout 1: Surat Rutin
         await generateLayoutRutin(doc, surat, organisasi, qrDataUrl, FOOTER_RESERVE, qrFooterUrl);
       } else {
-        // Layout 2: Surat Khusus (C,D,E,F,G,H,I,J,K)
         await generateLayoutKhusus(doc, surat, organisasi, qrDataUrl, FOOTER_RESERVE, qrFooterUrl);
       }
 
       doc.end();
-      stream.on('finish', () => resolve({ filepath }));
+      stream.on('finish', resolve);
       stream.on('error', reject);
     } catch (err) {
       reject(err);
     }
   });
+
+  // Gabungkan dokumen pendukung jika ada
+  const dokumenPendukung = surat.dokumenPendukung
+    ? (() => { try { return JSON.parse(surat.dokumenPendukung); } catch (_) { return []; } })()
+    : [];
+
+  if (dokumenPendukung.length > 0) {
+    const BASE_UPLOAD = process.env.UPLOAD_DIR
+      ? (process.env.UPLOAD_DIR.startsWith('/') ? process.env.UPLOAD_DIR : path.join(__dirname, '../../', process.env.UPLOAD_DIR))
+      : path.join(__dirname, '../../uploads');
+
+    // Kumpulkan file PDF pendukung yang valid
+    const validPdfPaths = [];
+    for (const dok of dokumenPendukung) {
+      const absPath = path.join(BASE_UPLOAD, 'dokumen-pendukung', path.basename(dok.path));
+      if (fs2.existsSync(absPath)) {
+        validPdfPaths.push({ path: absPath, nama: dok.nama });
+      } else {
+        console.warn('⚠️ Dokumen pendukung tidak ditemukan:', absPath);
+      }
+    }
+
+    if (validPdfPaths.length > 0) {
+      try {
+        // Merge menggunakan pdf-lib
+        const mergedPdf = await PDFLibDoc.create();
+
+        // Load surat utama
+        const mainBytes = fs2.readFileSync(filepath);
+        const mainDoc = await PDFLibDoc.load(mainBytes);
+        const mainPages = await mergedPdf.copyPages(mainDoc, mainDoc.getPageIndices());
+        mainPages.forEach(p => mergedPdf.addPage(p));
+
+        // Load & merge setiap dokumen pendukung
+        for (const dok of validPdfPaths) {
+          try {
+            const dokBytes = fs2.readFileSync(dok.path);
+            const dokDoc = await PDFLibDoc.load(dokBytes, { ignoreEncryption: true });
+            const dokPages = await mergedPdf.copyPages(dokDoc, dokDoc.getPageIndices());
+            dokPages.forEach(p => mergedPdf.addPage(p));
+          } catch (dokErr) {
+            console.warn(`⚠️ Gagal menggabungkan dokumen pendukung "${dok.nama}":`, dokErr.message);
+          }
+        }
+
+        const mergedBytes = await mergedPdf.save();
+        const mergedFilepath = filepath.replace('.pdf', '-merged.pdf');
+        fs2.writeFileSync(mergedFilepath, mergedBytes);
+
+        // Hapus file surat utama, ganti dengan merged
+        fs2.unlinkSync(filepath);
+        fs2.renameSync(mergedFilepath, filepath);
+      } catch (mergeErr) {
+        console.error('⚠️ Gagal merge dokumen pendukung, menggunakan surat tanpa dokumen pendukung:', mergeErr.message);
+        // Tetap kembalikan surat tanpa dokumen pendukung
+      }
+    }
+  }
+
+  return { filepath };
 }
 
 module.exports = { generateSuratPDF };

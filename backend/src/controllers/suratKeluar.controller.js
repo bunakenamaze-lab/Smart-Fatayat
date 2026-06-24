@@ -428,4 +428,99 @@ const getStatistik = async (req, res) => {
   }
 };
 
-module.exports = { getAllSurat, getSuratById, createSurat, updateSurat, deleteSurat, kirimSurat, tandaTangan, tolakSurat, downloadPDF, previewPDF, getStatistik };
+// ── UPLOAD DOKUMEN PENDUKUNG ─────────────────────────────────────────────────
+const uploadDokumenPendukungHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const surat = await prisma.suratKeluar.findUnique({ where: { id } });
+    if (!surat) return res.status(404).json({ success: false, message: 'Surat tidak ditemukan' });
+
+    if (!['DRAFT', 'DITOLAK_SEKRETARIS', 'DITOLAK_KEPALA'].includes(surat.status))
+      return res.status(400).json({ success: false, message: 'Dokumen pendukung hanya bisa diubah saat surat berstatus Draft atau Ditolak' });
+
+    if (!req.files || req.files.length === 0)
+      return res.status(400).json({ success: false, message: 'Tidak ada file yang diupload' });
+
+    const BASE_UPLOAD_DIR = process.env.UPLOAD_DIR
+      ? (process.env.UPLOAD_DIR.startsWith('/') ? process.env.UPLOAD_DIR : path.join(__dirname, '../../', process.env.UPLOAD_DIR))
+      : path.join(__dirname, '../../uploads');
+
+    // Parse existing docs
+    let existingDocs = [];
+    if (surat.dokumenPendukung) {
+      try { existingDocs = JSON.parse(surat.dokumenPendukung); } catch (_) {}
+    }
+
+    // Max 5 total
+    const totalAfter = existingDocs.length + req.files.length;
+    if (totalAfter > 5) {
+      // Hapus file yang baru diupload karena melebihi batas
+      for (const f of req.files) {
+        if (fs.existsSync(f.path)) fs.unlinkSync(f.path);
+      }
+      return res.status(400).json({ success: false, message: `Maksimal 5 dokumen pendukung. Saat ini ada ${existingDocs.length} dokumen.` });
+    }
+
+    const newDocs = req.files.map(f => {
+      // Simpan path relatif dari BASE_UPLOAD_DIR
+      const relPath = '/uploads/dokumen-pendukung/' + path.basename(f.path);
+      return { nama: f.originalname, path: relPath, size: f.size, uploadedAt: new Date().toISOString() };
+    });
+
+    const allDocs = [...existingDocs, ...newDocs];
+
+    await prisma.suratKeluar.update({
+      where: { id },
+      data: { dokumenPendukung: JSON.stringify(allDocs) },
+    });
+
+    res.json({ success: true, message: `${req.files.length} dokumen berhasil diupload`, data: allDocs });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Gagal mengupload dokumen pendukung' });
+  }
+};
+
+// ── DELETE DOKUMEN PENDUKUNG ─────────────────────────────────────────────────
+const deleteDokumenPendukung = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { filePath } = req.body; // path relatif dokumen yang dihapus
+
+    const surat = await prisma.suratKeluar.findUnique({ where: { id } });
+    if (!surat) return res.status(404).json({ success: false, message: 'Surat tidak ditemukan' });
+
+    if (!['DRAFT', 'DITOLAK_SEKRETARIS', 'DITOLAK_KEPALA'].includes(surat.status))
+      return res.status(400).json({ success: false, message: 'Dokumen pendukung hanya bisa diubah saat surat berstatus Draft atau Ditolak' });
+
+    let docs = [];
+    if (surat.dokumenPendukung) {
+      try { docs = JSON.parse(surat.dokumenPendukung); } catch (_) {}
+    }
+
+    const toDelete = docs.find(d => d.path === filePath);
+    if (!toDelete) return res.status(404).json({ success: false, message: 'Dokumen tidak ditemukan' });
+
+    // Hapus file fisik
+    const BASE_UPLOAD_DIR = process.env.UPLOAD_DIR
+      ? (process.env.UPLOAD_DIR.startsWith('/') ? process.env.UPLOAD_DIR : path.join(__dirname, '../../', process.env.UPLOAD_DIR))
+      : path.join(__dirname, '../../uploads');
+
+    const absPath = path.join(BASE_UPLOAD_DIR, 'dokumen-pendukung', path.basename(filePath));
+    if (fs.existsSync(absPath)) fs.unlinkSync(absPath);
+
+    const remaining = docs.filter(d => d.path !== filePath);
+
+    await prisma.suratKeluar.update({
+      where: { id },
+      data: { dokumenPendukung: remaining.length ? JSON.stringify(remaining) : null },
+    });
+
+    res.json({ success: true, message: 'Dokumen berhasil dihapus', data: remaining });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Gagal menghapus dokumen pendukung' });
+  }
+};
+
+module.exports = { getAllSurat, getSuratById, createSurat, updateSurat, deleteSurat, kirimSurat, tandaTangan, tolakSurat, downloadPDF, previewPDF, getStatistik, uploadDokumenPendukungHandler, deleteDokumenPendukung };

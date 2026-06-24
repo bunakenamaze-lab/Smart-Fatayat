@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeftIcon, PencilIcon, ArrowDownTrayIcon,
   CheckCircleIcon, XCircleIcon, PaperAirplaneIcon,
-  QrCodeIcon, ExclamationTriangleIcon, EyeIcon
+  QrCodeIcon, ExclamationTriangleIcon, EyeIcon,
+  PaperClipIcon
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 import { suratKeluarAPI, getUploadUrl } from '../services/api'
@@ -198,6 +199,53 @@ export default function SuratKeluarDetailPage() {
               <RichTextEditor value={surat.lampiran} readOnly />
             </div>
           )}
+
+          {/* Dokumen Pendukung */}
+          {(() => {
+            let docs = []
+            if (surat.dokumenPendukung) {
+              try {
+                docs = typeof surat.dokumenPendukung === 'string'
+                  ? JSON.parse(surat.dokumenPendukung)
+                  : surat.dokumenPendukung
+              } catch (_) {}
+            }
+            if (!Array.isArray(docs) || docs.length === 0) return null
+            return (
+              <div className="card card-body">
+                <div className="flex items-center gap-2 mb-4">
+                  <h2 className="section-title">Dokumen Pendukung</h2>
+                  <PaperClipIcon className="w-4 h-4 text-gray-400" />
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{docs.length} file</span>
+                </div>
+                <div className="space-y-2">
+                  {docs.map((dok, i) => {
+                    const fileUrl = getUploadUrl(dok.path)
+                    return (
+                      <a
+                        key={i}
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-primary-50 border border-gray-100 hover:border-primary-200 rounded-lg transition-colors group"
+                      >
+                        <div className="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <PaperClipIcon className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 group-hover:text-primary-700 truncate">{dok.nama}</p>
+                          <p className="text-xs text-gray-400">
+                            {dok.size ? `${(dok.size / 1024).toFixed(0)} KB` : 'PDF'} · Klik untuk membuka
+                          </p>
+                        </div>
+                        <ArrowDownTrayIcon className="w-4 h-4 text-gray-400 group-hover:text-primary-600 flex-shrink-0" />
+                      </a>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
         </div>
 
         {/* Sidebar */}

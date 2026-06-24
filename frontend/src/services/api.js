@@ -81,6 +81,10 @@ export const suratKeluarAPI = {
   tolak: (id, data) => api.post(`/surat-keluar/${id}/tolak`, data),
   downloadPDF: (id) => api.get(`/surat-keluar/${id}/download`, { responseType: 'blob' }),
   previewPDF: (id) => api.get(`/surat-keluar/${id}/preview`, { responseType: 'blob' }),
+  uploadDokumenPendukung: (id, formData) => api.post(`/surat-keluar/${id}/dokumen-pendukung`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  deleteDokumenPendukung: (id, filePath) => api.delete(`/surat-keluar/${id}/dokumen-pendukung`, { data: { filePath } }),
 }
 
 // Surat Masuk

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeftIcon, DocumentCheckIcon, InformationCircleIcon, EyeIcon, DocumentDuplicateIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, DocumentCheckIcon, InformationCircleIcon, EyeIcon, DocumentDuplicateIcon, XMarkIcon, PaperClipIcon, TrashIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 import { suratKeluarAPI, userAPI, templateAPI } from '../services/api'
 import RichTextEditor from '../components/editor/RichTextEditor'
@@ -91,6 +91,11 @@ export default function SuratKeluarFormPage() {
   const [previewModal, setPreviewModal] = useState(false)
   const [templateModal, setTemplateModal] = useState(false)
   const [templateSearch, setTemplateSearch] = useState('')
+  const fileInputRef = useRef(null)
+
+  // State dokumen pendukung: list dari server (saat edit) dan file pending upload (sebelum save)
+  const [dokumenServer, setDokumenServer] = useState([]) // [{nama, path, size, uploadedAt}]
+  const [dokumenPending, setDokumenPending] = useState([]) // File objects belum diupload
 
   // State hijriyah terpisah: {day, month, year} — inisialisasi dari hari ini (dengan offset 18.00)
   const [hijri, setHijri] = useState(() => todayHijriObj())
@@ -145,6 +150,15 @@ export default function SuratKeluarFormPage() {
         setHijri(parsed)
         setHijriManual(true)
       }
+      // Load dokumen pendukung yang sudah ada
+      if (existingSurat.dokumenPendukung) {
+        try {
+          const docs = typeof existingSurat.dokumenPendukung === 'string'
+            ? JSON.parse(existingSurat.dokumenPendukung)
+            : existingSurat.dokumenPendukung
+          setDokumenServer(Array.isArray(docs) ? docs : [])
+        } catch (_) { setDokumenServer([]) }
+      }
     }
   }, [existingSurat])
 
@@ -152,12 +166,32 @@ export default function SuratKeluarFormPage() {
 
   const saveMutation = useMutation({
     mutationFn: (data) => isEdit ? suratKeluarAPI.update(id, data) : suratKeluarAPI.create(data),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
+      const savedId = res.data.data?.id
+      // Upload dokumen pending jika ada
+      if (savedId && dokumenPending.length > 0) {
+        const formData = new FormData()
+        dokumenPending.forEach(f => formData.append('dokumen', f))
+        try {
+          await suratKeluarAPI.uploadDokumenPendukung(savedId, formData)
+        } catch (uploadErr) {
+          toast.error('Surat tersimpan, tetapi gagal mengupload beberapa dokumen pendukung')
+        }
+      }
       toast.success(res.data.message)
       queryClient.invalidateQueries(['surat-keluar'])
       navigate('/surat-keluar')
     },
     onError: (err) => toast.error(err.response?.data?.message || 'Gagal menyimpan surat'),
+  })
+
+  const deleteDocMutation = useMutation({
+    mutationFn: (filePath) => suratKeluarAPI.deleteDokumenPendukung(id, filePath),
+    onSuccess: (res) => {
+      setDokumenServer(res.data.data || [])
+      toast.success('Dokumen dihapus')
+    },
+    onError: (err) => toast.error(err.response?.data?.message || 'Gagal menghapus dokumen'),
   })
 
   const handleSubmit = (isDraft) => {
@@ -199,6 +233,33 @@ export default function SuratKeluarFormPage() {
     t.nama.toLowerCase().includes(templateSearch.toLowerCase()) ||
     t.perihal?.toLowerCase().includes(templateSearch.toLowerCase())
   )
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
+    const pdfFiles = files.filter(f => f.type === 'application/pdf')
+    if (pdfFiles.length !== files.length) {
+      toast.error('Hanya file PDF yang diizinkan')
+    }
+    const totalAfter = dokumenServer.length + dokumenPending.length + pdfFiles.length
+    if (totalAfter > 5) {
+      toast.error(`Maksimal 5 dokumen pendukung (sudah ada ${dokumenServer.length + dokumenPending.length})`)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+    setDokumenPending(prev => [...prev, ...pdfFiles])
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const removePendingDoc = (index) => {
+    setDokumenPending(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
 
   return (
     <div className="space-y-5 max-w-4xl">
@@ -394,6 +455,91 @@ export default function SuratKeluarFormPage() {
             </p>
             <RichTextEditor value={form.lampiranIsi} onChange={set('lampiranIsi')}
               placeholder="Tulis isi lampiran di sini (opsional)..." minHeight="150px" />
+          </div>
+
+          {/* Dokumen Pendukung */}
+          <div className="card card-body space-y-3">
+            <div className="flex items-center gap-2">
+              <h2 className="section-title">Dokumen Pendukung</h2>
+              <PaperClipIcon className="w-4 h-4 text-gray-400" />
+            </div>
+            <p className="text-xs text-gray-400">
+              Upload file PDF pendukung surat (maks. 5 file, maks. 10 MB per file). Dokumen akan digabungkan di akhir PDF surat.
+            </p>
+
+            {/* Daftar dokumen yang sudah tersimpan di server (mode edit) */}
+            {dokumenServer.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-gray-600">Dokumen tersimpan:</p>
+                {dokumenServer.map((dok, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2.5 bg-green-50 border border-green-100 rounded-lg">
+                    <PaperClipIcon className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">{dok.nama}</p>
+                      <p className="text-xs text-gray-400">{formatFileSize(dok.size)}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => deleteDocMutation.mutate(dok.path)}
+                      disabled={deleteDocMutation.isPending}
+                      className="p-1 rounded-md hover:bg-red-100 text-gray-400 hover:text-red-600 transition-colors flex-shrink-0"
+                      title="Hapus dokumen"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Daftar dokumen pending (belum diupload) */}
+            {dokumenPending.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-gray-600">Akan diupload:</p>
+                {dokumenPending.map((file, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2.5 bg-blue-50 border border-blue-100 rounded-lg">
+                    <PaperClipIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">{file.name}</p>
+                      <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removePendingDoc(i)}
+                      className="p-1 rounded-md hover:bg-red-100 text-gray-400 hover:text-red-600 transition-colors flex-shrink-0"
+                      title="Batal"
+                    >
+                      <XMarkIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Tombol upload */}
+            {(dokumenServer.length + dokumenPending.length) < 5 && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/pdf"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 w-full justify-center p-3 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-500 hover:border-primary-300 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+                >
+                  <ArrowUpTrayIcon className="w-4 h-4" />
+                  Pilih File PDF
+                </button>
+              </>
+            )}
+            {(dokumenServer.length + dokumenPending.length) >= 5 && (
+              <p className="text-xs text-amber-600 text-center py-2">Batas maksimal 5 dokumen tercapai.</p>
+            )}
           </div>
         </div>
 

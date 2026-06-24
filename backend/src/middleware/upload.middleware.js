@@ -73,8 +73,34 @@ const documentFilter = (req, file, cb) => {
   }
 };
 
+const dokumenPendukungStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(BASE_UPLOAD_DIR, 'dokumen-pendukung');
+    ensureDir(dir);
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const name = file.originalname.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9]/g, '-');
+    cb(null, `dok-${Date.now()}-${name}${ext}`);
+  }
+});
+
+const pdfOnlyFilter = (req, file, cb) => {
+  if (file.mimetype === 'application/pdf') {
+    cb(null, true);
+  } else {
+    cb(new Error('Hanya file PDF yang diizinkan untuk dokumen pendukung'), false);
+  }
+};
+
 const uploadLogo = multer({ storage: logoStorage, fileFilter: imageFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 const uploadFotoProfil = multer({ storage: fotoProfilStorage, fileFilter: imageFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 const uploadSuratMasuk = multer({ storage: suratMasukStorage, fileFilter: documentFilter, limits: { fileSize: 10 * 1024 * 1024 } });
+const uploadDokumenPendukung = multer({
+  storage: dokumenPendukungStorage,
+  fileFilter: pdfOnlyFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB per file
+});
 
-module.exports = { uploadLogo, uploadFotoProfil, uploadSuratMasuk };
+module.exports = { uploadLogo, uploadFotoProfil, uploadSuratMasuk, uploadDokumenPendukung };

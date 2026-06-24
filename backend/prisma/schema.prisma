@@ -139,6 +139,7 @@ model SuratKeluar {
   tanggalHijriyah String
   tempatTerbit    String      @default("Bandung")
   status          SuratStatus @default(DRAFT)
+  dokumenPendukung String?    @db.Text
 
   tataUsahaId     String?     @db.VarChar(36)
   kepalaId        String?     @db.VarChar(36)
